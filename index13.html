@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>One Prompt Create AI App - Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #181818; color: #f6f6f6; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 50px auto; padding: 32px; background: #232323; border-radius: 12px; }
+    h1 { color: #f5b301; }
+    .prompt-box { width: 100%; padding: 10px; border-radius: 6px; border: none; font-size: 1rem; background: #292929; color: #fff;}
+    .btn { background: #f5b301; color: #232323; border: none; border-radius: 6px; padding: 12px 24px; font-size: 1rem; cursor: pointer; margin: 18px 0;}
+    .output { background: #282828; color: #d6f6ff; padding: 16px; border-radius: 8px; min-height: 100px; margin-top: 16px;}
+    .export-btn { background: #e33e3e; color: #fff; border: none; border-radius: 4px; padding: 6px 14px; margin-top: 12px; cursor: pointer;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>One Prompt Create AI App (DEMO)</h1>
+    <p>Descreve a tua app numa frase:</p>
+    <input id="prompt" class="prompt-box" type="text" placeholder="Ex: Quero um painel para TVDE com estatísticas e mapa de calor">
+    <button class="btn" onclick="gerarApp()">Criar App</button>
+    <div id="appOutput" class="output"></div>
+    <button class="export-btn" onclick="exportar()">Exportar Relatório</button>
+  </div>
+
+  <script>
+    function gerarApp() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const output = document.getElementById('appOutput');
+      if (!prompt) {
+        output.innerHTML = 'Por favor, escreve o que queres criar!';
+        return;
+      }
+      // Simulação de “interpretação AI” do prompt
+      let widgets = [];
+      if (prompt.toLowerCase().includes('tvde')) widgets.push('Dashboard de viagens e receitas', 'Gráfico de zonas com maior demanda', 'Mapa de calor', 'Relatório PDF');
+      if (prompt.toLowerCase().includes('estatísticas')) widgets.push('Gráfico Estatístico', 'Resumo Diário');
+      if (prompt.toLowerCase().includes('mapa')) widgets.push('Widget de Mapa Interativo');
+
+      if (widgets.length === 0) widgets.push('Dashboard genérico', 'Widget de texto explicativo');
+
+      output.innerHTML = `<strong>App gerada com base no teu prompt:</strong><br>`
+        + widgets.map(w => `• ${w}`).join('<br>');
+    }
+
+    function exportar() {
+      alert('Relatório exportado! (Demo Simulada)');
+    }
+  </script>
+</body>
+</html>
