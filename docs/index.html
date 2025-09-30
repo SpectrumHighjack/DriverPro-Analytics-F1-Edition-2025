@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriverPro Analytics v10</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="/manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <meta name="theme-color" content="#218089">
+</head>
+<body>
+    <!-- Main Container -->
+    <div id="app" class="app-container">
+        <!-- Top Widget Selector -->
+        <div class="widget-selector" data-cy="widget-selector">
+            <select id="widgetSelect" class="form-control widget-dropdown" data-cy="widget-dropdown">
+                <option value="">Selecione o Widget</option>
+                <option value="dashboard">📊 Dashboard</option>
+                <option value="analytics">📈 Analytics</option>
+                <option value="heatmap">🗺️ HeatMap</option>
+                <option value="traffic_news">🚦 Trânsito & Notícias</option>
+                <option value="business_plan">💼 Business Plan</option>
+                <option value="account">⚙️ Conta</option>
+            </select>
+        </div>
+
+        <!-- Widget Container - Only ONE visible at a time -->
+        <div class="widgets-container" id="widgetsContainer">
+
+            <!-- Dashboard Widget -->
+            <div id="dashboard" class="widget hidden" data-cy="dashboard-widget">
+                <div class="widget-header">
+                    <h2 class="widget-title">📊 Dashboard Executivo</h2>
+                    <div class="kpi-badges">
+                        <span class="status status--success">Online</span>
+                        <span class="status status--info">Tempo Real</span>
+                    </div>
+                </div>
+                <div class="dashboard-content">
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value">€2.847</div>
+                            <div class="kpi-label">Receitas Hoje</div>
+                            <div class="kpi-change positive">+12.5%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value">47</div>
+                            <div class="kpi-label">Viagens Hoje</div>
+                            <div class="kpi-change positive">+8.2%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value">€60.57</div>
+                            <div class="kpi-label">Receita/Viagem</div>
+                            <div class="kpi-change positive">+3.8%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value">4.8★</div>
+                            <div class="kpi-label">Rating Médio</div>
+                            <div class="kpi-change positive">+0.2</div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 300px; position: relative;">
+                        <canvas id="dashboardChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Widget -->
+            <div id="analytics" class="widget hidden" data-cy="analytics-widget">
+                <div class="widget-header">
+                    <h2 class="widget-title">📈 Analytics & Machine Learning</h2>
+                    <div class="tech-badges">
+                        <span class="badge badge--primary">TF Lite</span>
+                        <span class="badge badge--success">Edge AI</span>
+                        <span class="badge badge--info">Real-time</span>
+                    </div>
+                </div>
+                <div class="analytics-content">
+                    <div class="predictions-section">
+                        <h3>Previsão Demanda - Próximas 6h</h3>
+                        <div class="driver-score">
+                            <div class="score-circle">
+                                <span class="score-value" id="driverScore">85</span>
+                                <span class="score-label">Driver Score</span>
+                            </div>
+                            <div class="score-details">
+                                <div class="score-item">
+                                    <span class="score-category">Eficiência</span>
+                                    <span class="score-percent">88%</span>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-category">Segurança</span>
+                                    <span class="score-percent">82%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 350px; position: relative;">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                    <div class="recommendations">
+                        <h4>Zona Recomendada</h4>
+                        <div class="zone-recommendation">
+                            <span class="zone-name">Aeroporto Lisboa</span>
+                            <span class="zone-rate">€18-25/h</span>
+                            <span class="confidence">Confiança: 92%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HeatMap Widget -->
+            <div id="heatmap" class="widget hidden" data-cy="heatmap-widget">
+                <div class="widget-header">
+                    <h2 class="widget-title">🗺️ HeatMap Demanda</h2>
+                    <div class="map-controls">
+                        <div class="transparency-control">
+                            <label>Transparência:</label>
+                            <input type="range" id="transparencySlider" min="0" max="100" value="70" class="slider">
+                        </div>
+                        <button id="refreshHeatmap" class="btn btn--sm btn--secondary">🔄 Atualizar</button>
+                    </div>
+                </div>
+                <div class="heatmap-content">
+                    <div class="heatmap-legend">
+                        <div class="legend-item">
+                            <span class="legend-color ultra"></span>
+                            🔴 Ultra Demanda
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color boa"></span>
+                            🟡 Boa Demanda
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color baixa"></span>
+                            🔵 Baixa Demanda
+                        </div>
+                    </div>
+                    <div id="map" class="map-container"></div>
+                    <div class="heatmap-data">
+                        <div class="data-point">
+                            <span class="location">Aeroporto</span>
+                            <span class="intensity high">90%</span>
+                            <span class="rate">€18-25/h</span>
+                        </div>
+                        <div class="data-point">
+                            <span class="location">Marquês Pombal</span>
+                            <span class="intensity medium">80%</span>
+                            <span class="rate">€14-20/h</span>
+                        </div>
+                        <div class="data-point">
+                            <span class="location">Cais do Sodré</span>
+                            <span class="intensity medium">70%</span>
+                            <span class="rate">€12-18/h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Traffic News Widget -->
+            <div id="traffic_news" class="widget hidden" data-cy="traffic-news-widget">
+                <div class="widget-header">
+                    <h2 class="widget-title">🚦 Trânsito & Notícias</h2>
+                    <div class="news-refresh">
+                        <span class="last-update">Atualizado: 16:30</span>
+                        <button id="refreshNews" class="btn btn--sm btn--secondary">🔄</button>
+                    </div>
+                </div>
+                <div class="traffic-content">
+                    <div class="news-item priority-high">
+                        <div class="news-icon">⚠️</div>
+                        <div class="news-content">
+                            <h4>A1 Lisboa-Porto: Obras no km 85</h4>
+                            <p>Condicionamento de via durante 3h na A1</p>
+                            <div class="news-meta">
+                                <span class="impact negative">Atraso médio: 25 min</span>
+                                <span class="timestamp">16:30</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item priority-medium">
+                        <div class="news-icon">✈️</div>
+                        <div class="news-content">
+                            <h4>Aeroporto Lisboa: Tráfego intenso</h4>
+                            <p>Maior afluência que o habitual no terminal 1</p>
+                            <div class="news-meta">
+                                <span class="impact positive">Oportunidade: +€5/viagem</span>
+                                <span class="timestamp">16:15</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="news-item priority-medium">
+                        <div class="news-icon">🚇</div>
+                        <div class="news-content">
+                            <h4>Metro Lisboa: Greve parcial linha azul</h4>
+                            <p>Serviço reduzido entre 14h-18h</p>
+                            <div class="news-meta">
+                                <span class="impact positive">Demanda TVDE +40%</span>
+                                <span class="timestamp">14:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Plan Widget -->
+            <div id="business_plan" class="widget hidden" data-cy="business-plan-widget">
+                <div class="widget-header">
+                    <h2 class="widget-title">💼 Business Plan</h2>
+                    <div class="export-buttons">
+                        <button id="exportPDF" class="btn btn--sm btn--primary" data-cy="export-pdf">📄 PDF</button>
+                        <button id="exportCSV" class="btn btn--sm btn--secondary" data-cy="export-csv">📊 CSV</button>
+                    </div>
+                </div>
+                <div class="business-content">
+                    <div class="business-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Receitas Previstas (€)</label>
+                                <input type="number" id="receitasPrevistas" class="form-control" value="3200" data-cy="receitas-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Custos Fixos (€)</label>
+                                <input type="number" id="custosFixos" class="form-control" value="850" data-cy="custos-fixos-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Custos Variáveis (€)</label>
+                                <input type="number" id="custosVariaveis" class="form-control" value="1200" data-cy="custos-variaveis-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Taxa Plataforma (%)</label>
+                                <input type="number" id="taxaPlataforma" class="form-control" value="25" min="0" max="100" data-cy="taxa-plataforma-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Combustível por km (€)</label>
+                                <input type="number" id="combustivelKm" class="form-control" value="0.12" step="0.01" data-cy="combustivel-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Desgaste por km (€)</label>
+                                <input type="number" id="desgasteKm" class="form-control" value="0.08" step="0.01" data-cy="desgaste-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="business-results">
+                        <div class="result-card">
+                            <h3>Rentabilidade Calculada</h3>
+                            <div class="result-value" id="rentabilidadeResult" data-cy="rentabilidade-result">€1.250,00</div>
+                            <div class="result-formula">
+                                Fórmula: (Receitas × (100-TaxaPlataforma)/100) - CustosFixos - CustosVariáveis
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height: 250px; position: relative;">
+                        <canvas id="businessChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Widget -->
+            <div id="account" class="widget hidden" data-cy="account-widget">
+                <div class="widget-header">
+                    <h2 class="widget-title">⚙️ Conta & Configurações</h2>
+                    <div class="profile-info">
+                        <span id="profileName">João Silva</span>
+                        <span id="profileCurrency">€</span>
+                    </div>
+                </div>
+                <div class="account-content">
+                    <div class="avatar-section">
+                        <h3>Escolha seu Avatar F1</h3>
+                        <div class="avatar-gallery" data-cy="avatar-gallery">
+                            <div class="avatar-option" data-avatar="aston_martin" data-cy="avatar-aston">
+                                <img src="helmet_fut_2.jpg" alt="Aston Martin" class="avatar-image" loading="lazy">
+                                <span class="avatar-name">Aston Martin</span>
+                            </div>
+                            <div class="avatar-option" data-avatar="williams" data-cy="avatar-williams">
+                                <img src="helmet_fut_3.jpg" alt="Williams Racing" class="avatar-image" loading="lazy">
+                                <span class="avatar-name">Williams</span>
+                            </div>
+                            <div class="avatar-option" data-avatar="alpine" data-cy="avatar-alpine">
+                                <img src="helmet_fut_4.jpg" alt="Alpine F1" class="avatar-image" loading="lazy">
+                                <span class="avatar-name">Alpine</span>
+                            </div>
+                            <div class="avatar-option" data-avatar="haas" data-cy="avatar-haas">
+                                <img src="helmet_fut_6.jpg" alt="Haas F1" class="avatar-image" loading="lazy">
+                                <span class="avatar-name">Haas</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="currency-section">
+                        <h3>País & Moeda</h3>
+                        <div class="form-group">
+                            <label class="form-label">Selecionar País</label>
+                            <select id="countrySelect" class="form-control" data-cy="country-select">
+                                <option value="PT">🇵🇹 Portugal (€)</option>
+                                <option value="ES">🇪🇸 Espanha (€)</option>
+                                <option value="FR">🇫🇷 França (€)</option>
+                                <option value="BR">🇧🇷 Brasil (R$)</option>
+                                <option value="US">🇺🇸 Estados Unidos ($)</option>
+                                <option value="GB">🇬🇧 Reino Unido (£)</option>
+                            </select>
+                        </div>
+                        <div class="currency-preview">
+                            <span>Moeda Atual: </span>
+                            <strong id="currentCurrency" data-cy="current-currency">€ Euro</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sophia Chat Button (Always Visible) -->
+    <button id="sophiaChatBtn" class="sophia-chat-btn" data-cy="sophia-chat-btn">
+        💬 Sophia
+    </button>
+
+    <!-- Sophia Chat Modal -->
+    <div id="sophiaModal" class="modal modal-blur hidden" data-cy="sophia-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content sophia-modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💬 Sophia AI Assistant</h3>
+                <div class="modal-controls">
+                    <button id="minimizeSophia" class="modal-btn" data-cy="minimize-sophia">−</button>
+                    <button id="maximizeSophia" class="modal-btn" data-cy="maximize-sophia">□</button>
+                    <button id="closeSophia" class="modal-btn" data-cy="close-sophia">×</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="chatMessages" class="chat-messages">
+                    <div class="chat-message sophia-message">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            <p>Olá! Sou a Sophia v10, sua assistente IA especializada em TVDE. Como posso ajudá-lo hoje?</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" class="form-control chat-input" placeholder="Digite sua pergunta..." data-cy="chat-input">
+                    <button id="sendMessage" class="btn btn--primary chat-send-btn" data-cy="send-message">📤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
